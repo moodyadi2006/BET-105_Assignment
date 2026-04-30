@@ -1,0 +1,36 @@
+# Pipeline data directories
+pdb_structures/
+unzipped_structures/
+stride_output/
+tripeptide_contexts/
+
+# Snakemake
+.snakemake/
+*.log
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+Rplots.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
