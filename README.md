@@ -2,6 +2,14 @@
 
 A structural bioinformatics pipeline that measures how the steric bulk of a neighboring residue influences the side-chain orientation of Arginine (ARG) in alpha-helical protein structures. Angle distributions are computed across ~50,000 PDB structures and visualized as density curves grouped by neighbor size class.
 
+Starting from `.pdb.gz` files, it runs STRIDE for secondary structure assignment, extracts tripeptide contexts, calculates signed angles between adjacent CA→Centroid vectors, and plots the distribution grouped by the size class of the left residue.
+
+---
+
+## Example Output
+
+![Angle Distribution](results/angle_plot.png)
+
 ---
 
 ## Overview
@@ -49,13 +57,29 @@ For every Arginine found in an alpha-helix across the PDB, the pipeline:
 ## Running the Pipeline
 
 ```bash
-bash run_pipeline.sh [PDB_DIR] [STRIDE_BIN]
+chmod +x run_pipeline.sh
+./run_pipeline.sh [PDB_DIR] [STRIDE_BIN]
 ```
 
-- `PDB_DIR` — path to folder containing `.pdb.gz` files (default: `pdbs`)
-- `STRIDE_BIN` — path to the STRIDE binary (default: `/usr/local/bin/stride`)
+Both arguments are optional. Defaults are `pdbs/` for the PDB directory and `/usr/local/bin/stride` for the STRIDE binary.
 
-This runs all four steps sequentially with 4 cores each.
+Example with custom paths:
+
+```bash
+./run_pipeline.sh pdb_files /usr/local/bin/stride
+```
+
+This runs all four steps sequentially with 4 cores each and produces `results/angles.tsv` and `results/angle_plot.png`.
+
+---
+
+## Re-plot from Existing angles.tsv
+
+If you already have `results/angles.tsv` and just want to regenerate the plot:
+
+```r
+Rscript scripts/plot_angle_distribution.R
+```
 
 ---
 
@@ -140,8 +164,6 @@ Rscript scripts/plot_angle_distribution.R
 
 Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale blue (Tiny) to deep navy (Bulky).
 
-![Angle Distribution](results/angle_plot.png)
-
 ---
 
 ## Configuration
@@ -156,16 +178,22 @@ target_aa: ARG
 
 ## Dependencies
 
-**Python**
+**Python 3.10+**
+
+```bash
+pip install -r requirements.txt
+```
+
 - `biopython`
 - `numpy`
 - `pandas`
 - `tqdm`
 
 **R**
-- `ggplot2`
-- `dplyr`
-- `readr`
+
+```r
+install.packages(c("ggplot2", "dplyr", "readr"))
+```
 
 **External**
 - STRIDE — secondary-structure assignment
