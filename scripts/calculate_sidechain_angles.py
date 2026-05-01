@@ -12,8 +12,7 @@ from tqdm import tqdm
 tripeptide_contexts_dir = sys.argv[1]
 output_file = sys.argv[2]
 target_aa = sys.argv[3]
-
-pdb_structures_dir = "pdb_structures"
+pdb_structures_dir = sys.argv[4] if len(sys.argv) > 4 else "pdbs"
 
 
 residue_size_map = {
@@ -142,10 +141,8 @@ for context_file in tqdm(context_files, desc="Processing contexts"):
         sidechain_vec_prev = centroid_prev - ca_prev
         sidechain_vec_cent = centroid_cent - ca_cent
 
-        helix_axis = np.cross(
-            ca_cent - ca_prev,
-            ca_next - ca_cent
-        )
+        # alternative axis: direct vector between consecutive alpha carbons
+        helix_axis = ca_cent - ca_prev
 
         if np.linalg.norm(helix_axis) == 0:
             continue
