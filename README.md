@@ -55,7 +55,7 @@ bash run_pipeline.sh [PDB_DIR] [STRIDE_BIN]
 - `PDB_DIR` — path to folder containing `.pdb.gz` files (default: `pdbs`)
 - `STRIDE_BIN` — path to the STRIDE binary (default: `/usr/local/bin/stride`)
 
-This runs all four steps sequentially with 8 cores each.
+This runs all four steps sequentially with 4 cores each.
 
 ---
 
@@ -138,7 +138,9 @@ The PDB directory is passed as the 4th argument (sourced from the `PDB_DIR` envi
 Rscript scripts/plot_angle_distribution.R
 ```
 
-Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale pale blue (Tiny) to deep navy (Bulky). 
+Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale gray (Tiny) to dark blue (Bulky).
+
+![Angle Distribution](results/angle_plot.png)
 
 ---
 
