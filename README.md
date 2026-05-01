@@ -9,7 +9,7 @@ A structural bioinformatics pipeline that measures how the steric bulk of a neig
 For every Arginine found in an alpha-helix across the PDB, the pipeline:
 
 1. Extracts the **tripeptide context** (previous–ARG–next) from STRIDE secondary-structure output.
-2. Computes the **signed dihedral angle** between the CA→sidechain-centroid vectors of the previous residue and ARG, using the local helix axis as the reference.
+2. Computes the **signed dihedral angle** between the CA→sidechain-centroid vectors of the previous residue and ARG, using the CA–CA vector as the reference axis.
 3. Classifies each measurement by the **size class** of the preceding residue (Tiny → Bulky).
 4. Plots the resulting **angle distributions** as colored density curves.
 
@@ -20,18 +20,21 @@ For every Arginine found in an alpha-helix across the PDB, the pipeline:
 ```
 .
 ├── config.yaml                          # target amino acid (default: ARG)
+├── run_pipeline.sh                      # runs all four steps end-to-end
 ├── secondary_structure_pipeline.smk     # Step 1: decompress PDBs, run STRIDE
 ├── context_extraction_pipeline.smk      # Step 2: extract tripeptide contexts
 ├── angle_calculation_pipeline.smk       # Step 3: calculate angles, write TSV
 │
 ├── scripts/
 │   ├── extract_tripeptide_context.py    # parse STRIDE output → context TSV
-│   ├── calculate_sidechain_angles.py    # compute angles (cross-product axis)
-│   ├── calculate_sidechain_angles_v2.py # compute angles (direct CA–CA axis)
+│   ├── calculate_sidechain_angles.py    # compute angles (CA–CA axis)
 │   └── plot_angle_distribution.R        # density plot by size class
 │
-├── pdb_structures/                      # input: gzipped PDB files (*.pdb.gz)
-├── unzipped_structures/                 # intermediate: decompressed PDBs (temp)
+├── smk_commands/                        # pre-built snakemake commands split into chunks
+│   └── 1_chunk.sh … 10_chunk.sh
+│
+├── pdbs/                                # input: gzipped PDB files (*.pdb.gz)
+├── unzipped_pdbs/                       # intermediate: decompressed PDBs (temp)
 ├── stride_output/                       # intermediate: STRIDE output (*.ss.out)
 ├── tripeptide_contexts/                 # intermediate: per-PDB context TSVs
 │
@@ -43,6 +46,19 @@ For every Arginine found in an alpha-helix across the PDB, the pipeline:
 
 ---
 
+## Running the Pipeline
+
+```bash
+bash run_pipeline.sh [PDB_DIR] [STRIDE_BIN]
+```
+
+- `PDB_DIR` — path to folder containing `.pdb.gz` files (default: `pdbs`)
+- `STRIDE_BIN` — path to the STRIDE binary (default: `/usr/local/bin/stride`)
+
+This runs all four steps sequentially with 8 cores each.
+
+---
+
 ## Pipeline Steps
 
 ### Step 1 — Secondary Structure (`secondary_structure_pipeline.smk`)
@@ -51,10 +67,13 @@ For every Arginine found in an alpha-helix across the PDB, the pipeline:
 snakemake -s secondary_structure_pipeline.smk --cores <N>
 ```
 
-- Decompresses each `pdb_structures/{pdb}.pdb.gz` to a temporary `unzipped_structures/{pdb}.pdb`.
-- Runs STRIDE on each structure to produce `stride_output/{pdb}.ss.out`.
+Reads `STRIDE_BIN` and `PDB_DIR` from environment variables. Decompresses each `{PDB_DIR}/{pdb}.pdb.gz` to a temporary `unzipped_pdbs/{pdb}.pdb`, then runs STRIDE to produce `stride_output/{pdb}.ss.out`.
 
-> **Note:** Update the STRIDE binary path in `secondary_structure_pipeline.smk` to match your system.
+For large datasets the `smk_commands/` folder contains pre-split chunk commands that can be run in parallel across nodes:
+
+```bash
+bash smk_commands/1_chunk.sh
+```
 
 ### Step 2 — Context Extraction (`context_extraction_pipeline.smk`)
 
@@ -97,11 +116,11 @@ then computes the signed angle as follows:
 ```
 sidechain_vec_prev = centroid(prev sidechain) − CA(prev)
 sidechain_vec_cent = centroid(center sidechain) − CA(center)
-helix_axis         = (CA_cent − CA_prev) × (CA_next − CA_cent)
+helix_axis         = CA_cent − CA_prev
 angle              = signed_angle_3d(sidechain_vec_prev, sidechain_vec_cent, helix_axis)
 ```
 
-Results are written to `results/angles.tsv` with columns: `pdb`, `left_aa`, `size_class`, `angle`.
+The PDB directory is passed as the 4th argument (sourced from the `PDB_DIR` environment variable). Results are written to `results/angles.tsv` with columns: `pdb`, `left_aa`, `size_class`, `angle`.
 
 #### Residue Size Classes
 
@@ -113,21 +132,13 @@ Results are written to `results/angles.tsv` with columns: `pdb`, `left_aa`, `siz
 | Large | K, M, Q, H, E |
 | Bulky | R, F, Y, W |
 
-#### Alternative axis (`calculate_sidechain_angles_v2.py`)
-
-Uses `helix_axis = CA_cent − CA_prev` (direct CA–CA vector) instead of the cross product. Run manually:
-
-```bash
-python scripts/calculate_sidechain_angles_v2.py tripeptide_contexts results/angles_v2.tsv ARG
-```
-
 ### Step 4 — Visualization
 
 ```r
 Rscript scripts/plot_angle_distribution.R
 ```
 
-Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale blue (Tiny) to deep navy (Bulky).
+Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale pale blue (Tiny) to deep navy (Bulky). 
 
 ---
 
