@@ -1,6 +1,6 @@
 # Pipeline data directories
-pdb_structures/
-unzipped_structures/
+pdbs/
+unzipped_pdbs/
 stride_output/
 tripeptide_contexts/
 

@@ -1,6 +1,7 @@
 configfile: "config.yaml"
 
 import glob
+import os
 
 TARGET_AA = config["target_aa"]
 
@@ -17,8 +18,9 @@ rule calculate_angles:
     output:
         "results/angles.tsv"
     params:
-        aa=TARGET_AA
+        aa=TARGET_AA,
+        pdb_dir=os.environ.get("PDB_DIR", "pdbs")
     shell:
         """
-        python scripts/calculate_sidechain_angles.py tripeptide_contexts {output} {params.aa}
+        python scripts/calculate_sidechain_angles.py tripeptide_contexts {output} {params.aa} {params.pdb_dir}
         """
