@@ -1,6 +1,6 @@
 # Arginine Side-Chain Geometry Analysis in Alpha-Helices
 
-A structural bioinformatics pipeline that measures how the steric bulk of a neighboring residue influences the side-chain orientation of Arginine (ARG) in alpha-helical protein structures. Angle distributions are computed across ~34,000 PDB structures and visualized as density curves grouped by neighbor size class.
+A structural bioinformatics pipeline that measures how the steric bulk of a neighboring residue influences the side-chain orientation of Arginine (ARG) in alpha-helical protein structures. Angle distributions are computed across ~50,000 PDB structures and visualized as density curves grouped by neighbor size class.
 
 ---
 
@@ -138,7 +138,7 @@ The PDB directory is passed as the 4th argument (sourced from the `PDB_DIR` envi
 Rscript scripts/plot_angle_distribution.R
 ```
 
-Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale gray (Tiny) to dark blue (Bulky).
+Reads `results/angles.tsv` and saves `results/angle_plot.png` — a density plot of angles (−180° to 180°) with one curve per size class, colored from pale blue (Tiny) to deep navy (Bulky).
 
 ![Angle Distribution](results/angle_plot.png)
 
